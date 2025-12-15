@@ -390,7 +390,42 @@ func determineRouterPorts(activeApps []*DdevApp) []string {
 		return uniquePorts[i] < uniquePorts[j]
 	})
 
+	// When router_bind_all_interfaces is enabled, filter to only allowed ports
+	if globalconfig.DdevGlobalConfig.RouterBindAllInterfaces {
+		uniquePorts = FilterAllowedPublicPorts(uniquePorts)
+	}
+
 	return uniquePorts
+}
+
+// FilterAllowedPublicPorts filters ports to only those that should be publicly exposed
+// when router_bind_all_interfaces is enabled. This restricts exposure to:
+// - Port 80 (HTTP)
+// - Port 443 (HTTPS)
+// - Ports explicitly configured in projects via HTTP_EXPOSE/HTTPS_EXPOSE
+// It blocks internal/administrative ports like the Traefik monitor port.
+func FilterAllowedPublicPorts(ports []string) []string {
+	var allowedPorts []string
+
+	for _, port := range ports {
+		// Always allow standard HTTP and HTTPS ports
+		if port == "80" || port == "443" {
+			allowedPorts = append(allowedPorts, port)
+			continue
+		}
+
+		// Block the Traefik monitor port
+		if port == globalconfig.DdevGlobalConfig.TraefikMonitorPort {
+			util.Debug("Blocking Traefik monitor port %s from public exposure (router_bind_all_interfaces is enabled)", port)
+			continue
+		}
+
+		// All other ports from project configurations are allowed
+		// These come from HTTP_EXPOSE and HTTPS_EXPOSE in docker-compose files
+		allowedPorts = append(allowedPorts, port)
+	}
+
+	return allowedPorts
 }
 
 // getConfigBasedRouterPorts collects port mappings from configuration files of all active projects

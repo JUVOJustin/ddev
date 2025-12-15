@@ -510,6 +510,15 @@ Whether to bind `ddev-router`'s ports on all network interfaces.
 
 When `true`, the router will bind on all network interfaces instead of only `localhost`, exposing DDEV projects to your local network. This is sometimes used to share projects on a local network, see [Sharing Your Project](../topics/sharing.md).
 
+!!!note "Security: Limited Port Exposure"
+    When `router_bind_all_interfaces` is enabled, only the following ports are exposed publicly:
+
+    * Port 80 (HTTP)
+    * Port 443 (HTTPS)
+    * Ports explicitly configured in project docker-compose files via `HTTP_EXPOSE` and `HTTPS_EXPOSE` environment variables
+
+    Internal administrative ports, including the Traefik dashboard (port 10999 by default), are **not** exposed publicly and remain accessible only on localhost for security reasons.
+
 ## `router_http_port`
 
 Port for DDEV router’s HTTP traffic.
