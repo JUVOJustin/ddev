@@ -1003,7 +1003,7 @@ func (app *DdevApp) RenderMailpitComposeYAML() (string, error) {
 
 	var doc bytes.Buffer
 	
-	uid, gid, username := util.GetContainerUser()
+	uid, gid, username := dockerutil.GetContainerUser()
 	
 	timezone := app.Timezone
 	if timezone == "" {
@@ -1020,6 +1020,7 @@ func (app *DdevApp) RenderMailpitComposeYAML() (string, error) {
 		Name:                    app.Name,
 		Plugin:                  "ddev",
 		AppType:                 app.Type,
+		WebserverType:           app.WebserverType,
 		MailpitPort:             GetInternalPort(app, "mailpit"),
 		HostMailpitPort:         app.HostMailpitPort,
 		DdevGenerated:           nodeps.DdevFileSignature,
@@ -1050,7 +1051,6 @@ func (app *DdevApp) RenderMailpitComposeYAML() (string, error) {
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
-func (app *DdevApp) RenderComposeYAML() (string, error) {
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
