@@ -1,0 +1,49 @@
+name: ${COMPOSE_PROJECT_NAME}
+  {{ .DdevGenerated }}
+services:
+  mailpit:
+    container_name: {{ .Plugin }}-${DDEV_SITENAME}-mailpit
+    image: axllent/mailpit:latest
+    profiles:
+      - mailpit
+    restart: "no"
+    user: '$DDEV_UID:$DDEV_GID'
+    hostname: {{ .Name }}-mailpit
+    networks: ["default", "ddev_default"]
+    
+    {{- if .HostMailpitPort }}
+    ports:
+      - "{{ $.DockerIP }}:{{ .HostMailpitPort }}:{{ .MailpitPort }}"
+    {{- end }}
+    
+    environment:
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}
+      - HTTPS_EXPOSE=${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}
+      - TZ={{ .Timezone }}
+      - MP_SMTP_BIND_ADDR=0.0.0.0:1025
+      - MP_UI_BIND_ADDR=0.0.0.0:{{ .MailpitPort }}
+    
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
+      com.ddev.approot: $DDEV_APPROOT
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:{{ .MailpitPort }}/"]
+      interval: "1s"
+      retries: 70
+      start_period: "{{ .DefaultContainerTimeout }}s"
+      {{ if templateCanUse "healthcheck.start_interval" -}}
+      start_interval: "1s"
+      {{- end }}
+      timeout: "70s"
+
+networks:
+  ddev_default:
+    name: ddev_default
+    external: true
+  default:
+    name: ${COMPOSE_PROJECT_NAME}_default
+    external: true

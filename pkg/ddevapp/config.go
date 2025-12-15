@@ -993,7 +993,64 @@ type composeYAMLVars struct {
 	XHProfMode                types.XHProfMode
 }
 
+// RenderMailpitComposeYAML renders the docker-compose.mailpit.yaml file
+// Returns empty string if hardened images are enabled
+func (app *DdevApp) RenderMailpitComposeYAML() (string, error) {
+	// Don't render mailpit compose file if hardened images are enabled
+	if globalconfig.DdevGlobalConfig.UseHardenedImages {
+		return "", nil
+	}
+
+	var doc bytes.Buffer
+	
+	uid, gid, username := util.GetContainerUser()
+	
+	timezone := app.Timezone
+	if timezone == "" {
+		var err error
+		timezone, err = util.GetLocalTimezone()
+		if err != nil {
+			util.Debug("Unable to autodetect timezone: %v", err.Error())
+		} else {
+			util.Debug("Using automatically detected timezone: TZ=%s", timezone)
+		}
+	}
+
+	templateVars := composeYAMLVars{
+		Name:                    app.Name,
+		Plugin:                  "ddev",
+		AppType:                 app.Type,
+		MailpitPort:             GetInternalPort(app, "mailpit"),
+		HostMailpitPort:         app.HostMailpitPort,
+		DdevGenerated:           nodeps.DdevFileSignature,
+		Timezone:                timezone,
+		Username:                username,
+		UID:                     uid,
+		GID:                     gid,
+		DockerIP:                "",
+		DefaultContainerTimeout: app.DefaultContainerTimeout,
+	}
+
+	var err error
+	templateVars.DockerIP, err = dockerutil.GetDockerIP()
+	if err != nil {
+		return "", err
+	}
+	if app.BindAllInterfaces {
+		templateVars.DockerIP = "0.0.0.0"
+	}
+
+	t, err := template.New("mailpit_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "mailpit_compose_template.yaml")
+	if err != nil {
+		return "", err
+	}
+
+	err = t.Execute(&doc, templateVars)
+	return doc.String(), err
+}
+
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
+func (app *DdevApp) RenderComposeYAML() (string, error) {
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error

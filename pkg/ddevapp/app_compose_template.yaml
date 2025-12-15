@@ -176,9 +176,6 @@ services:
     {{- range .WebExtraContainerPorts }}
       - "{{ $.DockerIP }}::{{ . }}"
     {{- end }}
-    {{- if .MailpitPort }}
-      - "{{ $.DockerIP }}:{{ .HostMailpitPort }}:{{ .MailpitPort }}"
-    {{- end }}
 
     environment:
     - COLUMNS
@@ -225,11 +222,11 @@ services:
     # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
     # To expose an HTTPS port, define the port as securePort:containerPort.
     {{ if eq .WebserverType "generic" }}
-    - HTTP_EXPOSE=${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
-    - HTTPS_EXPOSE=${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
+    - HTTP_EXPOSE={{ .WebExtraHTTPPorts }}
+    - HTTPS_EXPOSE={{ .WebExtraHTTPSPorts }}
     {{ else }}
-    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
-    - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
+    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80{{ .WebExtraHTTPPorts }}
+    - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80{{ .WebExtraHTTPSPorts }}
     {{ end }}
     - IS_DDEV_PROJECT=true
     - LINES

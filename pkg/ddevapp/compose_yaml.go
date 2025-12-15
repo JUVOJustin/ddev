@@ -60,6 +60,45 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 		}
 	}
 
+	// Render and write mailpit compose file
+	mailpitComposePath := app.GetConfigPath("docker-compose.mailpit.yaml")
+	mailpitRendered, err := app.RenderMailpitComposeYAML()
+	if err != nil {
+		return err
+	}
+
+	// If hardened images are enabled, remove the mailpit compose file if it exists
+	if mailpitRendered == "" {
+		if fileutil.FileExists(mailpitComposePath) {
+			err = os.Remove(mailpitComposePath)
+			if err != nil {
+				return fmt.Errorf("failed to remove %s: %v", mailpitComposePath, err)
+			}
+		}
+	} else {
+		// Write mailpit compose file
+		mailpitContentBytes := []byte(mailpitRendered)
+		skipMailpitWrite := false
+		if existingContent, err := os.ReadFile(mailpitComposePath); err == nil {
+			if bytes.Equal(mailpitContentBytes, existingContent) {
+				skipMailpitWrite = true
+			}
+		}
+
+		if !skipMailpitWrite {
+			f, err := os.Create(mailpitComposePath)
+			if err != nil {
+				return err
+			}
+			defer util.CheckClose(f)
+
+			_, err = f.Write(mailpitContentBytes)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
