@@ -443,10 +443,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
-#    If true, ddev-router will bind http/s and Mailpit ports on all
-#    network interfaces instead of localhost, so others on your local network can
-#    access those ports. Note that this exposes the Mailpit ports as well, which
-#    can be a major security issue, so choose wisely.
+#    If true, ddev-router will bind HTTP (80), HTTPS (443), and project-configured
+#    ports on all network interfaces instead of localhost, so others on your local
+#    network can access those ports. For security, internal ports like the Traefik
+#    dashboard (10999) are NOT exposed publicly and remain localhost-only.
+#    Mailpit and other project-configured ports (via HTTP_EXPOSE/HTTPS_EXPOSE)
+#    will be exposed if configured.
 
 # use_hardened_images: false
 # With hardened images a container that is exposed to the internet is
