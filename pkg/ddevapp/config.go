@@ -1030,6 +1030,7 @@ func (app *DdevApp) RenderMailpitComposeYAML() (string, error) {
 		GID:                     gid,
 		DockerIP:                "",
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
+		UseHardenedImages:       globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
 
 	var err error
