@@ -9,6 +9,7 @@ import (
 
 // TestFilterAllowedPublicPorts tests the FilterAllowedPublicPorts function
 // for proper port filtering when router_bind_all_interfaces is enabled.
+// This is a unit test that tests the filtering logic in isolation.
 func TestFilterAllowedPublicPorts(t *testing.T) {
 	// Save and restore original config
 	origTraefikMonitorPort := globalconfig.DdevGlobalConfig.TraefikMonitorPort
