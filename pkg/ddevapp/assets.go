@@ -18,6 +18,7 @@ import (
 //go:embed mysql_config_assets/*
 //go:embed global_dotddev_assets/* global_dotddev_assets/.gitignore global_dotddev_assets/commands/.gitattributes
 //go:embed app_compose_template.yaml
+//go:embed mailpit_compose_template.yaml
 //go:embed router_compose_template.yaml
 //go:embed ssh_auth_compose_template.yaml
 //go:embed traefik_config_template.yaml

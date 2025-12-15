@@ -230,8 +230,14 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		appDesc["httpurl"] = app.GetHTTPURL()
 		appDesc["httpsurl"] = app.GetHTTPSURL()
 	}
-	appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
-	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort()
+	
+	// Only include mailpit URLs if the mailpit container is running
+	// (i.e., when hardened images are not enabled)
+	if !globalconfig.DdevGlobalConfig.UseHardenedImages {
+		appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
+		appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort()
+	}
+	
 	appDesc["xhgui_https_url"] = "https://" + app.GetHostname() + ":" + app.GetXHGuiHTTPSPort()
 	appDesc["xhgui_url"] = "http://" + app.GetHostname() + ":" + app.GetXHGuiHTTPPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
@@ -1747,8 +1753,16 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
+	
+	// Enable mailpit profile by default unless hardened images are enabled
+	profiles := []string{}
+	if !globalconfig.DdevGlobalConfig.UseHardenedImages {
+		profiles = append(profiles, "mailpit")
+	}
+	
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Profiles:     profiles,
 		Action:       []string{"up", "-d"},
 	})
 	if err != nil {
